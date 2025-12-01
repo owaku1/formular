@@ -5,54 +5,90 @@ $errors = [];
 $success = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
     $email = trim($_POST["email"]);
     $username = trim($_POST["username"]);
-    $pass = $_POST["password"];
-    $pass2 = $_POST["password2"];
+    $password = $_POST["password"];
+    $password2 = $_POST["password2"];
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Neplatný email";
-    if (strlen($username) < 3) $errors[] = "Nick je moc krátký";
-    if ($pass !== $pass2) $errors[] = "Hesla se neshodují";
-    if (strlen($pass) < 6) $errors[] = "Heslo musí mít aspoň 6 znaků";
-    if (findUserByEmail($email)) $errors[] = "Email už existuje";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        $errors[] = "Neplatný email!";
+
+    if (strlen($username) < 3)
+        $errors[] = "Nick je moc krátký!";
+
+    if (strlen($password) < 4)
+        $errors[] = "Heslo musí mít alespoň 4 znaky!";
+
+    if ($password !== $password2)
+        $errors[] = "Hesla se neshodují!";
 
     if (empty($errors)) {
-        $hash = password_hash($pass, PASSWORD_DEFAULT);
-        global $pdo;
-
-        $q = $pdo->prepare("INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)");
-        $q->execute([$email, $username, $hash]);
-
-        $success = "Registrace proběhla úspěšně!";
+        if (findUserByEmail($email)) {
+            $errors[] = "Tento email je již použit!";
+        } else {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)");
+            $stmt->execute([$email, $username, $hash]);
+            $success = "Registrace úspěšná!";
+        }
     }
 }
 ?>
 
 <link rel="stylesheet" href="style/style.css">
 
-<div class="auth-container">
-    <h2>Registrace</h2>
+<div class="dark-toggle" onclick="toggleDark()">🌙 / ☀️</div>
 
-    <?php foreach ($errors as $e) echo "<div class='error'>$e</div>"; ?>
-    <?php if ($success) echo "<div class='success'>$success</div>"; ?>
+<div class="auth-container">
+
+    <h2 class="clean-title">Registrace</h2>
+    <p class="clean-subtitle">Vytvoř si svůj účet.</p>
+
+    <?php foreach ($errors as $e): ?>
+        <div class="error"><?= $e ?></div>
+    <?php endforeach; ?>
+
+    <?php if ($success): ?>
+        <div class="success"><?= $success ?></div>
+        <script>showToast("<?= $success ?>");</script>
+    <?php endif; ?>
 
     <form method="post">
-        <label>Email:</label>
-        <input name="email" type="email" required>
 
-        <label>Nick:</label>
-        <input name="username" type="text" required>
+        <label>Email</label>
+        <input type="email" name="email" required>
 
-        <label>Heslo:</label>
-        <input name="password" type="password" required>
+        <label>Nick</label>
+        <input type="text" name="username" required>
 
-        <label>Heslo znovu:</label>
-        <input name="password2" type="password" required>
+        <label>Heslo</label>
+        <input type="password" name="password" required>
+
+        <label>Heslo znovu</label>
+        <input type="password" name="password2" required>
 
         <button>Registrovat</button>
     </form>
 
-    <p style="text-align:center;margin-top:10px;">
-        Máš účet? <a href="login.php">Přihlásit se</a>
+    <p class="clean-back">
+        Máš účet? <a href="login.php">Přihlásit</a>
     </p>
 </div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+function toggleDark(){
+    document.body.classList.toggle("dark");
+    localStorage.setItem("darkmode", document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("darkmode")==="true") document.body.classList.add("dark");
+
+function showToast(msg){
+    const t=document.getElementById("toast");
+    t.innerText=msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2500);
+}
+</script>

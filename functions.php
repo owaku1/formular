@@ -1,26 +1,22 @@
 <?php
 require_once "config.php";
 
-function findUserByEmail($email) {
-    global $pdo;
-    $q = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $q->execute([$email]);
-    return $q->fetch();
-}
-
 function findUserById($id) {
     global $pdo;
-    $q = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-    $q->execute([$id]);
-    return $q->fetch();
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function isLogged() {
-    return isset($_SESSION["uid"]);
+function findUserByEmail($email) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email=?");
+    $stmt->execute([$email]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 function requireLogin() {
-    if (!isLogged()) {
+    if (!isset($_SESSION["uid"])) {
         header("Location: login.php");
         exit;
     }

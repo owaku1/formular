@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
 require_once "functions.php";
 requireLogin();
 
@@ -6,19 +9,16 @@ $user = findUserById($_SESSION["uid"]);
 $errors = [];
 $success = "";
 
-// Pokud složka uploads neexistuje → vytvořit automaticky
-if (!is_dir("uploads")) {
-    mkdir("uploads", 0777, true);
-}
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    // email + nick
     $email = trim($_POST["email"]);
     $username = trim($_POST["username"]);
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Neplatný email";
-    if (strlen($username) < 3) $errors[] = "Nick je moc krátký";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        $errors[] = "Neplatný email";
+
+    if (strlen($username) < 3)
+        $errors[] = "Nick je moc krátký";
 
     // změna hesla (volitelné)
     if (!empty($_POST["new_password"])) {
@@ -31,33 +31,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
-    // AVATAR UPLOAD
-    $avatarPath = $user["avatar"];
+    // AVATAR (BASE64)
+    $avatar = $user["avatar"];
 
     if (!empty($_FILES["avatar"]["name"])) {
+        $tmp = $_FILES["avatar"]["tmp_name"];
+        $ext = strtolower(pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION));
 
-        $file = $_FILES["avatar"];
-        $ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
-
-        if (!in_array($ext, ["jpg", "jpeg", "png", "gif"])) {
+        if (!in_array($ext, ["jpg","jpeg","png","gif"])) {
             $errors[] = "Avatar musí být JPG/PNG/GIF";
         } else {
-            $newName = "uploads/" . uniqid("av_") . "." . $ext;
+            $mime = ($ext == "png") ? "image/png" :
+                    (($ext == "gif") ? "image/gif" : "image/jpeg");
 
-            if (move_uploaded_file($file["tmp_name"], $newName)) {
-                $avatarPath = $newName;
-            } else {
-                $errors[] = "Nepodařilo se nahrát avatar.";
-            }
+            $data = file_get_contents($tmp);
+            $avatar = "data:$mime;base64," . base64_encode($data);
         }
     }
 
-    // UPDATE PROFILU
     if (empty($errors)) {
-        $q = $pdo->prepare("UPDATE users SET email=?, username=?, avatar=? WHERE id=?");
-        $q->execute([$email, $username, $avatarPath, $user["id"]]);
-
-        $success = "Profil byl úspěšně aktualizován!";
+        $pdo->prepare("UPDATE users SET email=?, username=?, avatar=? WHERE id=?")
+            ->execute([$email, $username, $avatar, $user["id"]]);
+        $success = "Změny uloženy!";
         $user = findUserById($user["id"]);
     }
 }
@@ -65,40 +60,82 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <link rel="stylesheet" href="style/style.css">
 
-<div class="auth-container">
-    <h2>Nastavení profilu</h2>
+<div class="dark-toggle" onclick="toggleDark()">🌙 / ☀️</div>
 
-    <?php foreach ($errors as $e) echo "<div class='error'>$e</div>"; ?>
-    <?php if ($success) echo "<div class='success'>$success</div>"; ?>
+<div class="auth-container clean-profile">
 
-    <form method="post" enctype="multipart/form-data">
+    <h2 class="clean-title">Nastavení profilu</h2>
+    <p class="clean-subtitle">Uprav avatar, email, nick nebo heslo.</p>
 
-        <label>Email:</label>
-        <input name="email" value="<?= htmlspecialchars($user["email"]) ?>">
+    <?php foreach ($errors as $e): ?>
+        <div class="error"><?= htmlspecialchars($e) ?></div>
+    <?php endforeach; ?>
 
-        <label>Nick:</label>
-        <input name="username" value="<?= htmlspecialchars($user["username"]) ?>">
+    <?php if ($success): ?>
+        <div class="success"><?= htmlspecialchars($success) ?></div>
+        <script>showToast("<?= htmlspecialchars($success) ?>")</script>
+    <?php endif; ?>
 
-        <label>Avatar:</label>
-        <input type="file" name="avatar">
+    <form method="post" enctype="multipart/form-data" class="clean-form">
 
-        <?php if ($user["avatar"]): ?>
-            <img src="<?= $user["avatar"] ?>" class="avatar-img">
-        <?php endif; ?>
+        <!-- skrytý input -->
+        <input type="file" id="avatarInput" name="avatar" style="display:none;">
 
-        <hr>
+        <!-- klikací avatar -->
+        <div class="clean-avatar-wrapper">
+            <div class="avatar-click">
+                <img id="avatarPreview" class="avatar-img"
+                     src="<?= $user['avatar'] ?: 'https://via.placeholder.com/200' ?>">
+            </div>
+            <p class="clean-avatar-text">Klikni pro změnu avataru</p>
+        </div>
 
-        <label>Nové heslo (volitelné):</label>
+        <label>Email</label>
+        <input type="email" name="email" value="<?= htmlspecialchars($user["email"]) ?>" required>
+
+        <label>Nick</label>
+        <input type="text" name="username" value="<?= htmlspecialchars($user["username"]) ?>" required>
+
+        <label>Nové heslo</label>
         <input type="password" name="new_password">
 
-        <label>Nové heslo znovu:</label>
+        <label>Nové heslo znovu</label>
         <input type="password" name="new_password2">
 
-        <button>Uložit změny</button>
-    </form>
+        <button class="clean-save">Uložit změny</button>
 
-    <p style="text-align:center;margin-top:15px;">
-        <a href="dashboard.php">Zpět</a>
-    </p>
+        <p class="clean-back">
+            <a href="dashboard.php">← Zpět</a>
+        </p>
+
+    </form>
 </div>
 
+<div id="toast" class="toast"></div>
+
+<script>
+function toggleDark(){
+    document.body.classList.toggle("dark");
+    localStorage.setItem("darkmode", document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("darkmode")==="true") document.body.classList.add("dark");
+
+document.querySelector(".avatar-click").onclick = () => {
+    document.getElementById("avatarInput").click();
+};
+
+document.getElementById("avatarInput").onchange = e => {
+    let file = e.target.files[0];
+    if (!file) return;
+    let r = new FileReader();
+    r.onload = ev => document.getElementById("avatarPreview").src = ev.target.result;
+    r.readAsDataURL(file);
+};
+
+function showToast(msg){
+    const t=document.getElementById("toast");
+    t.innerText=msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2500);
+}
+</script>

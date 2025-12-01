@@ -1,18 +1,34 @@
 <?php
-$DB_HOST = "localhost";
-$DB_NAME = "formular";
-$DB_USER = "root";
-$DB_PASS = "root"; // u XAMPP dej ""
+session_start();
 
-try {
-    $pdo = new PDO(
-        "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4",
-        $DB_USER,
-        $DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-    );
-} catch (PDOException $e) {
-    die("DB ERROR: " . $e->getMessage());
+// všechny možné kombinace pro MAMP a XAMPP
+$logins = [
+    ["root", ""],       // XAMPP
+    ["root", "root"],   // MAMP
+];
+
+// budeme testovat
+$connected = false;
+$errorMsg = "";
+
+foreach ($logins as $login) {
+    try {
+        $pdo = new PDO(
+            "mysql:host=localhost;dbname=formular;charset=utf8mb4",
+            $login[0],
+            $login[1]
+        );
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        // success!
+        $connected = true;
+        break;
+
+    } catch (PDOException $e) {
+        $errorMsg = $e->getMessage();
+    }
 }
 
-session_start();
+if (!$connected) {
+    die("DB ERROR: " . $errorMsg);
+}

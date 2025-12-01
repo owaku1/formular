@@ -1,75 +1,84 @@
 <?php
 require_once "functions.php";
 
-// vytvoříme verify kód při načtení stránky
-if (!isset($_SESSION["verify"])) {
-    $_SESSION["verify"] = strval(rand(10000, 99999));
+if (!isset($_SESSION["verify_code"])) {
+    $_SESSION["verify_code"] = rand(10000, 99999);
 }
 
-$error = "";
+$errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $email = trim($_POST["email"]);
-    $pass  = $_POST["password"];
+    $password = $_POST["password"];
     $verify = trim($_POST["verify"]);
 
-    // captcha kontrola
-    if ($verify !== $_SESSION["verify"]) {
-        $error = "Verify kód není správně!";
+    if ($verify !== strval($_SESSION["verify_code"])) {
+        $errors[] = "Špatný ověřovací kód!";
     } else {
-
         $user = findUserByEmail($email);
 
-        if (!$user || !password_verify($pass, $user["password_hash"])) {
-            $error = "Špatný email nebo heslo!";
+        if (!$user || !password_verify($password, $user["password_hash"])) {
+            $errors[] = "Špatný email nebo heslo!";
         } else {
-            unset($_SESSION["verify"]);
+            unset($_SESSION["verify_code"]);
             $_SESSION["uid"] = $user["id"];
             header("Location: dashboard.php");
             exit;
         }
     }
 
-    // vytvořit nový verify kód po každém pokusu
-    $_SESSION["verify"] = strval(rand(10000, 99999));
+    $_SESSION["verify_code"] = rand(10000, 99999);
 }
 ?>
 
 <link rel="stylesheet" href="style/style.css">
 
-<div class="auth-container">
-    <h2>Přihlášení</h2>
+<div class="dark-toggle" onclick="toggleDark()">🌙 / ☀️</div>
 
-    <?php if ($error) echo "<div class='error'>$error</div>"; ?>
+<div class="auth-container">
+    <h2 class="clean-title">Přihlášení</h2>
+    <p class="clean-subtitle">Zadej své údaje pro přístup.</p>
+
+    <?php foreach ($errors as $e): ?>
+        <div class="error"><?= $e ?></div>
+    <?php endforeach; ?>
 
     <form method="post">
 
-        <label>Email:</label>
-        <input name="email" type="email" required>
+        <label>Email</label>
+        <input type="email" name="email" required>
 
-        <label>Heslo:</label>
-        <input name="password" type="password" required>
+        <label>Heslo</label>
+        <input type="password" name="password" required>
 
-        <label>Verify kód:</label>
-        <div style="
-            padding:10px; 
-            background:#eee; 
-            margin-bottom:10px;
-            text-align:center;
-            font-size:22px;
-            font-weight:bold;
-            letter-spacing:4px;
-        ">
-            <?= $_SESSION["verify"] ?>
+        <label>Ověřovací kód</label>
+        <div class="verify-box">
+            <div class="verify-code"><?= $_SESSION["verify_code"] ?></div>
         </div>
+        <input type="text" name="verify" required placeholder="Zadej kód">
 
-        <input type="text" name="verify" placeholder="Zadej verify kód" required>
-
-        <button>Přihlásit se</button>
+        <button>Přihlásit</button>
     </form>
 
-    <p style="text-align:center;margin-top:10px;">
+    <p class="clean-back">
         Nemáš účet? <a href="register.php">Registrace</a>
     </p>
 </div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+function toggleDark(){
+    document.body.classList.toggle("dark");
+    localStorage.setItem("darkmode", document.body.classList.contains("dark"));
+}
+if(localStorage.getItem("darkmode")==="true") document.body.classList.add("dark");
+
+function showToast(msg){
+    const t=document.getElementById("toast");
+    t.innerText=msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2500);
+}
+</script>

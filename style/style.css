@@ -1,189 +1,220 @@
-/* ========================== */
-/* 🌈 GLOBAL STYLE */
-/* ========================== */
+/* ====== GLOBAL ====== */
+:root {
+    --bg-light: #f5f7fb;
+    --card-light: #ffffff;
+    --text-light: #1e1e1e;
+    --input-light: #eef0f4;
+    --primary-light: #4f46e5;
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Inter", Arial, Helvetica, sans-serif;
+    --bg-dark: #0f1117;
+    --card-dark: #1a1d25;
+    --text-dark: #e5e7eb;
+    --input-dark: #252832;
+    --primary-dark: #6366f1;
 }
 
 body {
-    background: linear-gradient(135deg, #6a5acd, #1e1e2f);
-    min-height: 100vh;
-    padding: 40px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    margin: 0;
+    font-family: "Inter", Arial, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-light);
+    transition: background 0.3s, color 0.3s;
 }
 
-/* ========================== */
-/* 🧊 GLASS CONTAINER */
-/* ========================== */
+/* DARK MODE */
+body.dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+}
 
+body.dark .auth-container {
+    background: var(--card-dark);
+}
+
+body.dark input {
+    background: var(--input-dark);
+    color: var(--text-dark);
+}
+
+body.dark button {
+    background: var(--primary-dark);
+}
+
+/* ====== PAGE CONTAINERS ====== */
 .auth-container {
-    width: 420px;
-    max-width: 90%;
+    max-width: 430px;
+    margin: 60px auto;
+    background: var(--card-light);
     padding: 35px;
-    border-radius: 20px;
-
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-
-    animation: fadeIn 0.5s ease;
-    color: white;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: 0.25s;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.auth-container h2 {
+.clean-title {
     text-align: center;
-    margin-bottom: 25px;
-    font-size: 27px;
+    font-size: 26px;
     font-weight: 700;
-    color: #ffffff;
+    margin: 0;
 }
 
-/* ========================== */
-/* ✏️ FORM ELEMENTS */
-/* ========================== */
-
-.auth-container label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    font-size: 15px;
-    color: #e8e8e8;
+.clean-subtitle {
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 25px;
 }
 
-.auth-container input[type="text"],
-.auth-container input[type="email"],
-.auth-container input[type="password"],
-.auth-container input[type="file"],
-.auth-container input[type="number"] {
+/* ====== INPUTS ====== */
+input {
     width: 100%;
     padding: 14px;
-    border-radius: 12px;
+    margin-top: 6px;
+    margin-bottom: 16px;
     border: none;
     outline: none;
-
-    margin-bottom: 18px;
-
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(6px);
-    color: white;
+    background: var(--input-light);
+    border-radius: 12px;
     font-size: 15px;
+    transition: 0.25s;
 }
 
-.auth-container input::placeholder {
-    color: #ddd;
+input:focus {
+    box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-.auth-container input:focus {
-    background: rgba(255, 255, 255, 0.28);
-    box-shadow: 0 0 8px rgba(255,255,255,0.3);
+/* DARK MODE FIX FOCUS */
+body.dark input:focus {
+    box-shadow: 0 0 0 3px var(--primary-dark);
 }
 
-/* ========================== */
-/* 🔘 BUTTON */
-/* ========================== */
-
-.auth-container button {
+/* ====== BUTTONS ====== */
+button {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #7b68ee, #957eff);
+    background: var(--primary-light);
     border: none;
     border-radius: 12px;
     color: white;
     font-size: 17px;
-    cursor: pointer;
-    font-weight: 700;
-    transition: 0.25s ease;
-    margin-top: 10px;
-}
-
-.auth-container button:hover {
-    background: linear-gradient(135deg, #6a5acd, #8f7bfd);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(140,120,255,0.4);
-}
-
-/* ========================== */
-/* ❗ ERROR & SUCCESS */
-/* ========================== */
-
-.error, .success {
-    padding: 12px 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
     font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.2s;
 }
 
-.error {
-    background: rgba(255, 60, 60, 0.25);
-    border-left: 4px solid #ff4040;
-    color: #ffbcbc;
+button:hover {
+    opacity: 0.88;
 }
 
-.success {
-    background: rgba(60, 255, 104, 0.25);
-    border-left: 4px solid #37ff83;
-    color: #b3ffd0;
-}
-
-/* ========================== */
-/* 🖼️ AVATAR */
-/* ========================== */
-
-.avatar-img {
-    width: 120px;
-    height: 120px;
+/* ====== AVATAR ====== */
+.avatar-click {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
     border-radius: 50%;
-    object-fit: cover;
-
-    display: block;
-    margin: 20px auto;
-
-    border: 4px solid rgba(255,255,255,0.55);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-
-    transition: 0.3s;
-}
-
-.avatar-img:hover {
-    transform: scale(1.05);
-}
-
-/* ========================== */
-/* 🔗 LINKS */
-/* ========================== */
-
-.auth-container a {
-    color: #d7c8ff;
-    font-weight: bold;
-    text-decoration: none;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
     transition: 0.25s;
 }
 
-.auth-container a:hover {
-    color: white;
-    text-decoration: underline;
+.avatar-click:hover {
+    transform: scale(1.04);
 }
 
-/* ========================== */
-/* 🔸 HR LINE */
-/* ========================== */
+.avatar-click:hover::after {
+    content: "📷";
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.55);
+    color: white;
+    padding: 8px 0;
+    font-size: 18px;
+}
 
-.auth-container hr {
-    margin: 25px 0;
-    border: none;
-    border-bottom: 1px solid rgba(255,255,255,0.3);
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ====== TEXT ELEMENTS ====== */
+.clean-avatar-text {
+    text-align: center;
+    margin-top: 10px;
+    opacity: 0.7;
+}
+
+.clean-back {
+    text-align: center;
+    margin-top: 15px;
+}
+
+/* ====== DARK MODE BUTTON ====== */
+.dark-toggle {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    background: var(--card-light);
+    padding: 10px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+    transition: 0.3s;
+}
+
+body.dark .dark-toggle {
+    background: var(--card-dark);
+    color: var(--text-dark);
+}
+
+/* ====== NOTIFICATIONS ====== */
+.toast {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background: var(--primary-light);
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 12px;
+    opacity: 0;
+    font-size: 16px;
+    transform: translateY(20px);
+    transition: 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+body.dark .toast {
+    background: var(--primary-dark);
+}
+
+/* ====== ERROR / SUCCESS ====== */
+.error, .success {
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.error {
+    background: #ff5f5f;
+    color: white;
+}
+
+.success {
+    background: #4ade80;
+    color: #0f1117;
+}
+
+/* ====== FORM LABELS ====== */
+label {
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
 }
